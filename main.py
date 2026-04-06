@@ -1,9 +1,7 @@
 import tkinter as tk
-from servicios.tarea_servicio import TareaServicio
-from ui.app_tkinter import AppTkinter
+from ui.app_tkinter import App
 
 if __name__ == "__main__":
     root = tk.Tk()
-    servicio = TareaServicio()
-    app = AppTkinter(root, servicio)
+    app = App(root)
     root.mainloop()
