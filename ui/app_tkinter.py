@@ -1,51 +1,56 @@
 import tkinter as tk
+from servicios.tarea_servicio import TareaServicio
 
-class AppTkinter:
-    def __init__(self, root, servicio):
+class App:
+    def __init__(self, root):
         self.root = root
-        self.servicio = servicio
-
         self.root.title("Lista de Tareas")
 
+        self.servicio = TareaServicio()
+
+        # Campo de entrada
         self.entry = tk.Entry(root, width=40)
         self.entry.pack(pady=10)
 
-        self.entry.bind("<Return>", self.agregar_tarea)
+        # Botones
+        self.btn_agregar = tk.Button(root, text="Agregar", command=self.agregar_tarea)
+        self.btn_agregar.pack()
 
-        btn_frame = tk.Frame(root)
-        btn_frame.pack()
+        self.btn_completar = tk.Button(root, text="Completar", command=self.completar_tarea)
+        self.btn_completar.pack()
 
-        tk.Button(btn_frame, text="Añadir Tarea", command=self.agregar_tarea).grid(row=0, column=0, padx=5)
-        tk.Button(btn_frame, text="Marcar Completada", command=self.marcar_completada).grid(row=0, column=1, padx=5)
-        tk.Button(btn_frame, text="Eliminar", command=self.eliminar_tarea).grid(row=0, column=2, padx=5)
+        self.btn_eliminar = tk.Button(root, text="Eliminar", command=self.eliminar_tarea)
+        self.btn_eliminar.pack()
 
-        self.lista = tk.Listbox(root, width=50)
+        # Lista de tareas
+        self.lista = tk.Listbox(root, width=50, height=10)
         self.lista.pack(pady=10)
 
-        self.lista.bind("<Double-1>", self.marcar_completada)
+        # Atajos de teclado
+        self.root.bind("<Return>", lambda event: self.agregar_tarea())
+        self.root.bind("<c>", lambda event: self.completar_tarea())
+        self.root.bind("<Delete>", lambda event: self.eliminar_tarea())
+        self.root.bind("<Escape>", lambda event: self.root.quit())
 
-    def agregar_tarea(self, event=None):
+    def actualizar_lista(self):
+        self.lista.delete(0, tk.END)
+        for tarea in self.servicio.obtener_tareas():
+            self.lista.insert(tk.END, str(tarea))
+
+    def agregar_tarea(self):
         descripcion = self.entry.get()
-        if descripcion:
-            tarea = self.servicio.agregar_tarea(descripcion)
-            self.lista.insert(tk.END, f"{tarea.id}. {tarea.descripcion}")
-            self.entry.delete(0, tk.END)
+        self.servicio.agregar_tarea(descripcion)
+        self.entry.delete(0, tk.END)
+        self.actualizar_lista()
 
-    def marcar_completada(self, event=None):
+    def completar_tarea(self):
         seleccion = self.lista.curselection()
         if seleccion:
-            index = seleccion[0]
-            tarea = self.servicio.obtener_tareas()[index]
-            self.servicio.completar_tarea(tarea.id)
-
-            self.lista.delete(index)
-            self.lista.insert(index, f"{tarea.id}. [Hecho] {tarea.descripcion}")
-            self.lista.itemconfig(index, fg="gray")
+            self.servicio.completar_tarea(seleccion[0])
+            self.actualizar_lista()
 
     def eliminar_tarea(self):
         seleccion = self.lista.curselection()
         if seleccion:
-            index = seleccion[0]
-            tarea = self.servicio.obtener_tareas()[index]
-            self.servicio.eliminar_tarea(tarea.id)
-            self.lista.delete(index)
+            self.servicio.eliminar_tarea(seleccion[0])
+            self.actualizar_lista()
